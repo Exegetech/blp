@@ -1,0 +1,13 @@
+a. Manually execute the following stack-machine program
+
+```
+push 4    -> stack: [4]
+push 2    -> stack: [4, 2]
+push 24   -> stack: [4, 2, 24]
+push 21   -> stack: [4, 2, 24, 21]
+sub       -> stack: [4, 2, 3]
+mult      -> stack: [4, 6]
+add       -> stack: [10]
+```
+
+b. 4 + (2 * (24 - 21))
