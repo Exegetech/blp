@@ -47,10 +47,15 @@ local V  = lpeg.V
 
 local space = S("\r\n\t ")^0
 
-local sign    = S("+-")^-1
-local number  = (sign * R("09")^1 / numNode) * -R("AZ", "az") * space
-local hex     = (P("0") * S("xX") * R("09", "AF", "af")^1 / hexNode) * space
-local numeral = (hex + number) * space
+local sign          = S("+-")^-1
+local numberChar    = R("09")
+local hexNumberChar = numberChar + R("AF", "af")
+local hexadecimal   = (P("0") * S("xX") * hexNumberChar^1) / hexNode
+local decimalInt    = sign * numberChar^1
+local decimalFloat  = sign * (numberChar^0 * S(".") * numberChar^1)
+local decimal       = (decimalFloat + decimalInt) / numNode
+local scientific    = ((decimalFloat + decimalInt) * S("eE") * (decimalFloat + decimalInt)) / numNode
+local numeral       = (hexadecimal + scientific + decimal) * space
 
 local expOp       = C(S("^")) * space
 local mulDivModOp = C(S("*/%")) * space
@@ -281,6 +286,15 @@ function Test:testEvaluating()
     { input = " 010", output = 10 },
     { input = " -010", output = -10 },
     { input = " +010", output = 10 },
+    { input = "0.5", output = 0.5 },
+    { input = ".3", output = 0.3 },
+    { input = "1.3", output = 1.3 },
+    { input = "000.9", output = 0.9 },
+    { input = "000.8b", output = nil },
+    { input = "+0000.7", output = 0.7 },
+    { input = "-0000.7", output = -0.7 },
+    { input = "2e3", output = 2000.0 },
+    { input = "2.3e-5", output = 0.000023 },
     { input = "11+ +22", output = 33 },
     { input = "11+ -22", output = -11 },
     { input = "+13 +-25 +    +36", output = 24 },
