@@ -140,16 +140,19 @@ local function foldBinary(list)
   return tree
 end
 
-local function logicalOpNode(e1, op, e2)
-  printTable(e1)
-  printTable(op)
-  printTable(e2)
-  return {
-    tag = "logicalop",
-    op = op:gsub("%s+", ""),
-    e1 = e1,
-    e2 = e2,
-  }
+local function foldLogicalBinary(list)
+  local tree = list[1]
+  for i = 2, #list, 2 do
+    local op = list[i]:gsub("%s+", "")
+    tree = {
+      tag = "logicalop",
+      e1  = tree,
+      op  = op,
+      e2  = list[i + 1],
+    }
+  end
+
+  return tree
 end
 
 local P   = lpeg.P
@@ -289,10 +292,9 @@ local g = P({"program",
 
   printStat         = printOp * expTop / printNode,
 
-  expTop            = exp5,
+  expTop            = exp6,
 
-  -- expTop            = exp6,
-  -- exp6              = space * (exp5 * (logicalOp * exp5)^0 / logicalOpNode),
+  exp6              = space * (Ct(exp5 * (logicalOp * exp5)^0) / foldLogicalBinary),
   
   exp5              = space * (Ct(exp4 * (compOp * exp4)^0) / foldBinary),
 
@@ -1205,18 +1207,18 @@ end
 
 function Test:testLogicalOperator()
   local cases = {
-    -- { input = [[
-    --   return 4 and 5;
-    -- ]], output = 5 },
-    -- { input = [[
-    --   return 0 and 3;
-    -- ]], output = 0 },
-    -- { input = [[
-    --   return 0 or 10;
-    -- ]], output = 10 },
-    -- { input = [[
-    --   return 2 or 3;
-    -- ]], output = 2 },
+    { input = [[
+      return 4 and 5;
+    ]], output = 5 },
+    { input = [[
+      return 0 and 3;
+    ]], output = 0 },
+    { input = [[
+      return 0 or 10;
+    ]], output = 10 },
+    { input = [[
+      return 2 or 3;
+    ]], output = 2 },
   }
 
   if TEST_LOGICAL_OPERATOR then
