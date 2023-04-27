@@ -15,6 +15,7 @@ local tests = {
   "tests/test_if",
   "tests/test_while",
   "tests/test_logical",
+  "tests/test_array",
 }
 
 for _, test in ipairs(tests) do

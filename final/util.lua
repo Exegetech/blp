@@ -75,10 +75,32 @@ local function negate(val)
   end
 end
 
+local function printArray(array)
+  for i, v in ipairs(array) do
+    print(i .. "= " .. tostring(v))
+  end
+end
+
+function create2DArray(i, j)
+  local table = {
+    size = i,
+  }
+
+  for x = 1, i do
+    table[x] = {
+      size = j
+    }
+  end
+
+  return table
+end
+
 return {
   pt = pt,
   I = I,
   createNode = createNode,
   negate = negate,
   countNewLine = countNewLine,
+  printArray = printArray,
+  create2DArray = create2DArray,
 }

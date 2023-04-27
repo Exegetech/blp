@@ -25,7 +25,12 @@ local function run(code, memory, stack, debug)
       if debug then
         io.write("print ", stack[top])
       end
-      print(stack[top])
+
+      if type(stack[top]) == "table" then
+        printArray(stack[top])
+      else
+        print(stack[top])
+      end
     elseif code[pc] == "not" then
       if debug then
         io.write("not ", stack[top])
@@ -219,6 +224,47 @@ local function run(code, memory, stack, debug)
       else
         top = top - 1
       end
+    elseif code[pc] == "newarray" then
+      local dimensions = stack[top]
+      top = top - 1
+
+      -- TODO: Generalize it to n dimensions
+      if dimensions == 2 then
+        local i = stack[top]
+        top = top - 1
+        local j = stack[top]
+        top = top - 1
+
+        local nestedArray = util.create2DArray(i, j)
+        top = top + 1
+        stack[top] = nestedArray
+      else
+        local i = stack[top]
+        stack[top] = {
+          size = i
+        }
+      end
+    elseif code[pc] == "getarray" then
+      local array = stack[top - 1]
+      local index = stack[top]
+
+      if index > array.size then
+        error("index out of range")
+      end
+
+      stack[top - 1] = array[index]
+      top = top - 1
+    elseif code[pc] == "setarray" then
+      local array = stack[top - 2]
+      local index = stack[top - 1]
+
+      if index > array.size then
+        error("index out of range")
+      end
+
+      local value = stack[top]
+      array[index] = value
+      top = top - 3
     else
       error("unknown instruction")
     end

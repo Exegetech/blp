@@ -87,8 +87,37 @@ local function codeExp(state, ast)
       codeExp(state, ast.e2)
       fixJump2Here(state, jump)
     end
+  elseif ast.tag == "indexed" then
+    codeExp(state, ast.array)
+    codeExp(state, ast.index)
+    addCode(state, "getarray")
+  elseif ast.tag == "new" then
+    for i = 1, #ast.size do
+      codeExp(state, ast.size[i])
+    end
+
+    codeExp(state, ast.dimensions)
+    addCode(state, "newarray")
   else
     error("invalid tree")
+  end
+end
+
+local function codeAssignment(state, ast)
+  local lhs = ast.lhs
+  if lhs.tag == "variable" then
+    codeExp(state, ast.exp)
+    addCode(state, "store")
+
+    local number = storeVar2Num(state, lhs.val)
+    addCode(state, number)
+  elseif lhs.tag == "indexed" then
+    codeExp(state, lhs.array)
+    codeExp(state, lhs.index)
+    codeExp(state, ast.exp)
+    addCode(state, "setarray")
+  else
+    error("unknown tag")
   end
 end
 
@@ -97,11 +126,7 @@ local function codeStatement(state, ast)
     codeStatement(state, ast.st1)
     codeStatement(state, ast.st2)
   elseif ast.tag == "assignment" then
-    codeExp(state, ast.exp)
-    addCode(state, "store")
-
-    number = storeVar2Num(state, ast.id)
-    addCode(state, number)
+    codeAssignment(state, ast)
   elseif ast.tag == "return" then
     codeExp(state, ast.exp)
     addCode(state, "return")

@@ -4,11 +4,12 @@ local util = require("util")
 local numNode = util.createNode("number", "val")
 local hexNode = util.createNode("hex", "val")
 local varNode = util.createNode("variable", "val")
-local assignmentNode = util.createNode("assignment", "id", "exp")
+local assignmentNode = util.createNode("assignment", "lhs", "exp")
 local returnNode = util.createNode("return", "exp")
 local printNode = util.createNode("print", "exp")
 local negNode = util.createNode("not", "exp")
 local whileNode = util.createNode("while1", "cond", "body")
+local indexedNode = util.createNode("indexed", "array", "index")
 
 local function sequenceNode(st1, st2)
   if st2 == nil then
@@ -78,6 +79,35 @@ local function foldLogicalBinary(list)
   return tree
 end
 
+local function foldIndex(list)
+  local tree = list[1]
+  for i = 2, #list do
+    tree = {
+      tag = "indexed",
+      array = tree,
+      index = list[i]
+    }
+  end
+
+  return tree
+end
+
+local function foldNew(list)
+  local tree = {
+    tag = "new",
+    size = {},
+    dimensions = numNode(#list)
+  }
+
+  table.insert(tree.size, list[#list])
+
+  for i = #list - 1, 1, -1 do
+    table.insert(tree.size, list[i])
+  end
+
+  return tree
+end
+
 local P   = lpeg.P
 local S   = lpeg.S
 local R   = lpeg.R
@@ -131,12 +161,13 @@ local function T(t)
 end
 
 local reserved = {
-  "return",
-  "if",
   "elseif",
-  "else",
+  "return",
   "while",
+  "else",
+  "new",
   "and",
+  "if",
   "or",
 }
 
@@ -171,6 +202,7 @@ local ID = C(Cmt(
 
 local var = ID / varNode
 
+local lhs  = V("lhs")
 local exp0 = V("exp0")
 local exp1 = V("exp1")
 local exp2 = V("exp2")
@@ -209,7 +241,7 @@ local g = P({"program",
 
   whileStat         = Rw("while") * expTop * block / whileNode,
 
-  assignStat        = ID * T("=") * expTop / assignmentNode,
+  assignStat        = lhs * T("=") * expTop / assignmentNode,
 
   returnStat        = Rw("return") * expTop / returnNode,
 
@@ -230,8 +262,13 @@ local g = P({"program",
 
   exp1              = space * (Ct(exp0 * (expOp * exp0)^0) / foldBinary),
 
-  exp0              = numeral
+  exp0              = Ct(Rw("new") * (T("[") * expTop * T("]"))^0) / foldNew
+                    + numeral
                     + (T("(") * expTop * T(")"))
+                    + lhs,
+
+
+  lhs               = Ct(var * (T("[") * expTop * T("]"))^0) / foldIndex
                     + var,
 
   space             = (blockComment + S("\r\n\t ") + comment)^0
