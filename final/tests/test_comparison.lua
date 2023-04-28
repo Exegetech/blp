@@ -18,11 +18,13 @@ function Test:testComparison()
   }
 
   for _, case in ipairs(cases) do
+    local input = "function main() {" .. case.input .. "}"
+
     if case.output == nil then
-      local parsed = parser.parse(case.input)
+      local parsed = parser.parse(input)
       lu.assertEquals(parsed, nil)
     else
-      local parsed = parser.parse(case.input)
+      local parsed = parser.parse(input)
       local code = ast.compile(parsed)
 
       local stack = {}

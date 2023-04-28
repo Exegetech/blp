@@ -24,7 +24,8 @@ function Test:testSyntaxError()
   }
 
   for _, case in ipairs(cases) do
-    local parsed = parser.parse(case.input, true)
+    local input = "function main() {" .. case.input .. "}"
+    local parsed = parser.parse(input, true)
 
     lu.assertEquals(true, true)
   end

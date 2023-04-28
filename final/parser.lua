@@ -10,6 +10,7 @@ local printNode = util.createNode("print", "exp")
 local negNode = util.createNode("not", "exp")
 local whileNode = util.createNode("while1", "cond", "body")
 local indexedNode = util.createNode("indexed", "array", "index")
+local funcNode = util.createNode("function", "name", "body")
 
 local function sequenceNode(st1, st2)
   if st2 == nil then
@@ -161,6 +162,7 @@ local function T(t)
 end
 
 local reserved = {
+  "function",
   "elseif",
   "return",
   "while",
@@ -190,16 +192,7 @@ local logicalOp   = C(andOp + orOp) * space
 -- local ID = (C(alphaunderscore * alphanum^0) - excluded)  * space
 
 -- Alternative implementation
-local ID = C(Cmt(
-  alphaunderscore * alphanum^0,
-  function(str, pos, match)
-    if excluded:match(match) ~= nil then
-      return false
-    else
-      return pos
-    end
-  end)) * space
-
+local ID = V("ID")
 local var = ID / varNode
 
 local lhs  = V("lhs")
@@ -219,9 +212,14 @@ local printStat   = V("printStat")
 local ifStat      = V("ifStat")
 local whileStat   = V("whileStat")
 local block = V("block")
+local funcDec = V("funcDec")
 
 local g = P({"program",
-  program           = space * statementsOrExps * -P(1),
+  -- program           = space * statementsOrExps * -P(1),
+  program           = space * funcDec * -P(1),
+
+  funcDec           = Rw("function") * ID * T("(") * T(")") * block / funcNode,
+
   statementsOrExps  = statementOrExp * ((T(";") * statementsOrExps) + T(";"))^-1 / sequenceNode,
 
   block             = T("{") * statementsOrExps * T(";")^-1 * T("}"),
@@ -278,7 +276,19 @@ local g = P({"program",
 
                         maxmatch = math.max(maxmatch, position)
                         return true
-                      end)
+                      end),
+
+  ID                 = C(Cmt(
+                        alphaunderscore * alphanum^0,
+                        function(str, pos, match)
+                          if excluded:match(match) ~= nil then
+                            return false
+                          else
+                            return pos
+                          end
+                        end))
+                      * space
+
 })
 
 

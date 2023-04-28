@@ -158,6 +158,14 @@ local function codeStatement(state, ast)
   end
 end
 
+local function codeFunction(state, ast)
+  if ast.name ~= "main" then
+    error("no function main")
+  end
+
+  codeStatement(state, ast.body)
+end
+
 local function compile(ast)
   local state = {
     code = {},
@@ -165,7 +173,7 @@ local function compile(ast)
     numOfVariables = 0
   }
 
-  codeStatement(state, ast)
+  codeFunction(state, ast)
 
   -- All programs return 0
   addCode(state, "push")

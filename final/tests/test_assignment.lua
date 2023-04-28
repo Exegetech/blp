@@ -14,7 +14,8 @@ function Test:testAssignment()
   }
 
   for _, case in ipairs(cases) do
-    local parsed = parser.parse(case.input)
+    local input = "function main() {" .. case.input .. "}"
+    local parsed = parser.parse(input)
     local code = ast.compile(parsed)
 
     local stack = {}
