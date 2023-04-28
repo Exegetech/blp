@@ -22,7 +22,7 @@ function Test:testSequence()
     local stack = {}
     local memory = {}
 
-    vm.run(code, memory, stack)
+    vm.run(code, memory, stack, false, 0)
 
     lu.assertEquals(memory[1], case.result)
     if case.result2 then

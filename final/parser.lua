@@ -216,7 +216,7 @@ local funcDec = V("funcDec")
 
 local g = P({"program",
   -- program           = space * statementsOrExps * -P(1),
-  program           = space * funcDec * -P(1),
+  program           = space * Ct(funcDec^1) * -P(1),
 
   funcDec           = Rw("function") * ID * T("(") * T(")") * block / funcNode,
 

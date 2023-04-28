@@ -1,12 +1,11 @@
 local util = require("util")
 
-local function run(code, memory, stack, debug)
+local function run(code, memory, stack, debug, top)
   if debug then
     print("----------------")
   end
 
   local pc = 1
-  local top = 0
 
   while true do
 
@@ -20,7 +19,7 @@ local function run(code, memory, stack, debug)
     end
 
     if code[pc] == "return" then
-      return
+      return top
     elseif code[pc] == "print" then
       if debug then
         io.write("print ", stack[top])

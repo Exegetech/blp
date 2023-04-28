@@ -21,7 +21,7 @@ function Test:testAssignment()
     local stack = {}
     local memory = {}
 
-    vm.run(code, memory, stack)
+    vm.run(code, memory, stack, false, 0)
 
     local result = stack[1]
     lu.assertEquals(result, case.output)

@@ -106,6 +106,10 @@ end
 local function codeAssignment(state, ast)
   local lhs = ast.lhs
   if lhs.tag == "variable" then
+    if state.funcs[lhs.val] then
+      error("cannot have global variable with the same name as a function")
+    end
+
     codeExp(state, ast.exp)
     addCode(state, "store")
 
@@ -159,28 +163,42 @@ local function codeStatement(state, ast)
 end
 
 local function codeFunction(state, ast)
-  if ast.name ~= "main" then
-    error("no function main")
+  if state.funcs[ast.name] then
+    error("already has function with name " .. ast.name)
   end
 
+  local code = {}
+  state.funcs[ast.name] = {
+    code = code,
+  }
+
+  state.code = code
+
   codeStatement(state, ast.body)
+
+  -- All functions return 0
+  addCode(state, "push")
+  addCode(state, 0)
+  addCode(state, "return")
 end
 
 local function compile(ast)
   local state = {
-    code = {},
+    funcs = {},
     variables = {},
     numOfVariables = 0
   }
 
-  codeFunction(state, ast)
+  for i = 1, #ast do
+    codeFunction(state, ast[i])
+  end
 
-  -- All programs return 0
-  addCode(state, "push")
-  addCode(state, 0)
-  addCode(state, "return")
+  local main = state.funcs["main"]
+  if not main then
+    error("no function main")
+  end
 
-  return state.code
+  return main.code
 end
 
 return {

@@ -26,7 +26,7 @@ function Test:testReturn()
       k10 = 10,
     }
 
-    vm.run(code, memory, stack)
+    vm.run(code, memory, stack, false, 0)
 
     local result = stack[1]
     lu.assertEquals(result, case.output)

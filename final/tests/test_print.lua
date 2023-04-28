@@ -22,7 +22,7 @@ function Test:testPrint()
     local stack = {}
     local memory = {}
 
-    vm.run(code, memory, stack)
+    vm.run(code, memory, stack, false, 0)
     lu.assertEquals(true, true)
   end
 end
