@@ -140,7 +140,7 @@ local function codeAssignment(state, ast)
 end
 
 local function codeBlock(state, ast)
-  codeStatement(ast.body)
+  codeStatement(state, ast.body)
 end
 
 local function codeStatement(state, ast)
