@@ -264,8 +264,16 @@ local function run(code, memory, stack, debug, top)
       local value = stack[top]
       array[index] = value
       top = top - 3
+    elseif code[pc] == "call" then
+      pc = pc + 1
+      local code = code[pc]
+      local returned = run(code, mem, stack, debug, top)
+      top = returned
+    elseif code[pc] == "pop" then
+      pc = pc + 1
+      top = top - code[pc]
     else
-      error("unknown instruction")
+      error("unknown instruction " .. code[pc])
     end
 
     if debug then

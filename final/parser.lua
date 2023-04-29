@@ -11,6 +11,9 @@ local negNode = util.createNode("not", "exp")
 local whileNode = util.createNode("while1", "cond", "body")
 local indexedNode = util.createNode("indexed", "array", "index")
 local funcNode = util.createNode("function", "name", "body")
+local funcForwardNode = util.createNode("functionForward", "name")
+local callNode = util.createNode("call", "fname")
+-- local blockNode = util.createNode("block", "body")
 
 local function sequenceNode(st1, st2)
   if st2 == nil then
@@ -196,6 +199,7 @@ local ID = V("ID")
 local var = ID / varNode
 
 local lhs  = V("lhs")
+local call = V("call")
 local exp0 = V("exp0")
 local exp1 = V("exp1")
 local exp2 = V("exp2")
@@ -211,22 +215,25 @@ local returnStat  = V("returnStat")
 local printStat   = V("printStat")
 local ifStat      = V("ifStat")
 local whileStat   = V("whileStat")
+local callStat    = V("callStat")
 local block = V("block")
 local funcDec = V("funcDec")
 
 local g = P({"program",
-  -- program           = space * statementsOrExps * -P(1),
   program           = space * Ct(funcDec^1) * -P(1),
 
-  funcDec           = Rw("function") * ID * T("(") * T(")") * block / funcNode,
+  funcDec           = Rw("function") * ID * T("(") * T(")") * block / funcNode
+                    + Rw("function") * ID * T("(") * T(")") * T(";") / funcForwardNode,
 
   statementsOrExps  = statementOrExp * ((T(";") * statementsOrExps) + T(";"))^-1 / sequenceNode,
 
+  -- block             = T("{") * statementsOrExps * T(";")^-1 * T("}") / blockNode,
   block             = T("{") * statementsOrExps * T(";")^-1 * T("}"),
 
   statementOrExp    = block
                     + ifStat
                     + whileStat
+                    + callStat
                     + assignStat
                     + returnStat
                     + printStat
@@ -238,6 +245,8 @@ local g = P({"program",
                     / foldIfNode,
 
   whileStat         = Rw("while") * expTop * block / whileNode,
+
+  callStat          = call,
 
   assignStat        = lhs * T("=") * expTop / assignmentNode,
 
@@ -263,11 +272,14 @@ local g = P({"program",
   exp0              = Ct(Rw("new") * (T("[") * expTop * T("]"))^0) / foldNew
                     + numeral
                     + (T("(") * expTop * T(")"))
+                    + call
                     + lhs,
 
 
   lhs               = Ct(var * (T("[") * expTop * T("]"))^0) / foldIndex
                     + var,
+
+  call              = ID * T("(") * T(")") / callNode,
 
   space             = (blockComment + S("\r\n\t ") + comment)^0
                     * P(function(match, position)

@@ -2,6 +2,7 @@ local lu = require("luaunit")
 local parser = require("../parser")
 local ast = require("../ast")
 local vm = require("../vm")
+local util = require("../util")
 
 Test = {}
 
@@ -12,11 +13,43 @@ function Test:testFunction()
         return 2;
       }
     ]], output = 2 },
+    { input = [[
+      function foo() {
+        return 33
+      }
+
+      function main() {
+        return 2 + foo()
+      }
+    ]], output = 35 },
+    { input = [[
+      function foo() {
+        return 33
+      }
+
+      function main() {
+        a = foo();
+        return 2 + a
+      }
+    ]], output = 35 },
+    -- { input = [[
+    --   function foo();
+
+    --   function main() {
+    --     a = foo();
+    --     return 2 + a
+    --   }
+
+    --   function foo() {
+    --     return 33
+    --   }
+    -- ]], output = 35 },
   }
 
   for _, case in ipairs(cases) do
     local parsed = parser.parse(case.input)
     local code = ast.compile(parsed)
+    -- print(util.pt(code))
 
     local stack = {}
     local memory = {}

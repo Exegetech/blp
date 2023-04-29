@@ -1,3 +1,5 @@
+local util = require("./util")
+
 local function addCode(state, val)
   local code = state.code
   code[#code + 1] = val
@@ -60,10 +62,22 @@ local function fixJump2Here(state, loc)
   state.code[loc] = currentPosition(state)
 end
 
+local function codeCall(state, ast)
+  local func = state.funcs[ast.fname]
+  if not func then
+    error("undefined function " .. ast.fname)
+  end
+
+  addCode(state, "call")
+  addCode(state, func.code)
+end
+
 local function codeExp(state, ast)
   if ast.tag == "number" or ast.tag == "hex" then
     addCode(state, "push")
     addCode(state, ast.val)
+  elseif ast.tag == "call" then
+    codeCall(state, ast)
   elseif ast.tag == "binop" then
     codeExp(state, ast.e1)
     codeExp(state, ast.e2)
@@ -129,6 +143,10 @@ local function codeStatement(state, ast)
   if ast.tag == "sequence" then
     codeStatement(state, ast.st1)
     codeStatement(state, ast.st2)
+  elseif ast.tag == "call" then
+    codeCall(state, ast)
+    addCode(state, "pop")
+    addCode(state, "1")
   elseif ast.tag == "assignment" then
     codeAssignment(state, ast)
   elseif ast.tag == "return" then
@@ -163,7 +181,8 @@ local function codeStatement(state, ast)
 end
 
 local function codeFunction(state, ast)
-  if state.funcs[ast.name] then
+  local func = state.funcs[ast.name]
+  if type(func) == "table" then
     error("already has function with name " .. ast.name)
   end
 
