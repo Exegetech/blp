@@ -139,6 +139,10 @@ local function codeAssignment(state, ast)
   end
 end
 
+local function codeBlock(state, ast)
+  codeStatement(ast.body)
+end
+
 local function codeStatement(state, ast)
   if ast.tag == "sequence" then
     codeStatement(state, ast.st1)
@@ -147,6 +151,8 @@ local function codeStatement(state, ast)
     codeCall(state, ast)
     addCode(state, "pop")
     addCode(state, "1")
+  elseif ast.tag == "block" then
+    codeBlock(state, ast)
   elseif ast.tag == "assignment" then
     codeAssignment(state, ast)
   elseif ast.tag == "return" then

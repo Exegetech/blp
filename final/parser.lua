@@ -13,7 +13,7 @@ local indexedNode = util.createNode("indexed", "array", "index")
 local funcNode = util.createNode("function", "name", "body")
 local funcForwardNode = util.createNode("functionForward", "name")
 local callNode = util.createNode("call", "fname")
--- local blockNode = util.createNode("block", "body")
+local blockNode = util.createNode("block", "body")
 
 local function sequenceNode(st1, st2)
   if st2 == nil then
@@ -227,8 +227,7 @@ local g = P({"program",
 
   statementsOrExps  = statementOrExp * ((T(";") * statementsOrExps) + T(";"))^-1 / sequenceNode,
 
-  -- block             = T("{") * statementsOrExps * T(";")^-1 * T("}") / blockNode,
-  block             = T("{") * statementsOrExps * T(";")^-1 * T("}"),
+  block             = T("{") * statementsOrExps * T(";")^-1 * T("}") / blockNode,
 
   statementOrExp    = block
                     + ifStat
