@@ -11,7 +11,6 @@ local negNode = util.createNode("not", "exp")
 local whileNode = util.createNode("while1", "cond", "body")
 local indexedNode = util.createNode("indexed", "array", "index")
 local funcNode = util.createNode("function", "name", "body")
-local funcForwardNode = util.createNode("functionForward", "name")
 local callNode = util.createNode("call", "fname")
 local blockNode = util.createNode("block", "body")
 
@@ -222,12 +221,12 @@ local funcDec = V("funcDec")
 local g = P({"program",
   program           = space * Ct(funcDec^1) * -P(1),
 
-  funcDec           = Rw("function") * ID * T("(") * T(")") * block / funcNode
-                    + Rw("function") * ID * T("(") * T(")") * T(";") / funcForwardNode,
+  funcDec           = Rw("function") * ID * T("(") * T(")") * (block + T(";")) / funcNode,
 
   statementsOrExps  = statementOrExp * ((T(";") * statementsOrExps) + T(";"))^-1 / sequenceNode,
 
-  block             = T("{") * statementsOrExps * T(";")^-1 * T("}") / blockNode,
+  block             = T("{") * statementsOrExps * T(";")^-1 * T("}"),
+  -- block             = T("{") * statementsOrExps * T(";")^-1 * T("}") / blockNode,
 
   statementOrExp    = block
                     + ifStat

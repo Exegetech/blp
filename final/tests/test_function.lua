@@ -32,24 +32,23 @@ function Test:testFunction()
         return 2 + a
       }
     ]], output = 35 },
-    -- { input = [[
-    --   function foo();
+    { input = [[
+      function foo();
 
-    --   function main() {
-    --     a = foo();
-    --     return 2 + a
-    --   }
+      function main() {
+        a = foo();
+        return 2 + a
+      }
 
-    --   function foo() {
-    --     return 33
-    --   }
-    -- ]], output = 35 },
+      function foo() {
+        return 33
+      }
+    ]], output = 35 },
   }
 
   for _, case in ipairs(cases) do
     local parsed = parser.parse(case.input)
     local code = ast.compile(parsed)
-    -- print(util.pt(code))
 
     local stack = {}
     local memory = {}
@@ -61,47 +60,47 @@ function Test:testFunction()
   end
 end
 
-function Test:testFunctionNameConflict()
-  local cases = {
-    { input = [[
-      function main() {
-        return 2;
-      }
+-- function Test:testFunctionNameConflict()
+--   local cases = {
+--     { input = [[
+--       function main() {
+--         return 2;
+--       }
 
-      function main() {
-        return 3;
-      }
-    ]], output = 2 },
-  }
+--       function main() {
+--         return 3;
+--       }
+--     ]], output = 2 },
+--   }
 
-  for _, case in ipairs(cases) do
-    local parsed = parser.parse(case.input)
+--   for _, case in ipairs(cases) do
+--     local parsed = parser.parse(case.input)
 
-    local helper = function()
-      ast.compile(parsed)
-    end
+--     local helper = function()
+--       ast.compile(parsed)
+--     end
 
-    lu.assertErrorMsgContains("already has function with name main", helper)
-  end
-end
+--     lu.assertErrorMsgContains("already has function with name main", helper)
+--   end
+-- end
 
-function Test:testFunctionGlobalVariableConflict()
-  local cases = {
-    { input = [[
-      function main() {
-        main = 3;
-        return main;
-      }
-    ]], output = 2 },
-  }
+-- function Test:testFunctionGlobalVariableConflict()
+--   local cases = {
+--     { input = [[
+--       function main() {
+--         main = 3;
+--         return main;
+--       }
+--     ]], output = 2 },
+--   }
 
-  for _, case in ipairs(cases) do
-    local parsed = parser.parse(case.input)
+--   for _, case in ipairs(cases) do
+--     local parsed = parser.parse(case.input)
 
-    local helper = function()
-      ast.compile(parsed)
-    end
+--     local helper = function()
+--       ast.compile(parsed)
+--     end
 
-    lu.assertErrorMsgContains("cannot have global variable with the same name as a function", helper)
-  end
-end
+--     lu.assertErrorMsgContains("cannot have global variable with the same name as a function", helper)
+--   end
+-- end

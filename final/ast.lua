@@ -187,24 +187,45 @@ local function codeStatement(state, ast)
 end
 
 local function codeFunction(state, ast)
-  local func = state.funcs[ast.name]
-  if type(func) == "table" then
-    error("already has function with name " .. ast.name)
+  if ast.body == nil then
+    -- is a function forward declaration
+    local code = {}
+    state.funcs[ast.name] = {
+      code = code,
+    }
+
+    state.code = code
+  else
+    -- is a function declaration
+    local funcData = state.funcs[ast.name]
+    if funcData ~= nil then
+      if #(funcData.code) > 0 then
+        error("already has function with name " .. ast.name)
+      else
+        state.code = funcData.code
+        codeStatement(state, ast.body)
+
+        -- All functions return 0
+        addCode(state, "push")
+        addCode(state, 0)
+        addCode(state, "return")
+      end
+    end
+
+    local code = {}
+    state.funcs[ast.name] = {
+      code = code,
+    }
+
+    state.code = code
+
+    codeStatement(state, ast.body)
+
+    -- All functions return 0
+    addCode(state, "push")
+    addCode(state, 0)
+    addCode(state, "return")
   end
-
-  local code = {}
-  state.funcs[ast.name] = {
-    code = code,
-  }
-
-  state.code = code
-
-  codeStatement(state, ast.body)
-
-  -- All functions return 0
-  addCode(state, "push")
-  addCode(state, 0)
-  addCode(state, "return")
 end
 
 local function compile(ast)
