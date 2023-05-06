@@ -13,7 +13,6 @@ local indexedNode = util.createNode("indexed", "array", "index")
 local funcNode = util.createNode("function", "name", "body")
 local callNode = util.createNode("call", "fname")
 local blockNode = util.createNode("block", "body")
-local localVarNode = util.createNode("local", "name", "init")
 
 local function sequenceNode(st1, st2)
   if st2 == nil then
@@ -110,6 +109,25 @@ local function foldNew(list)
   end
 
   return tree
+end
+
+local function localVarNode(name, init)
+  if init == nil then
+    return {
+      tag = "local",
+      name = name,
+      init = {
+        tag = 'number';
+        val = 0;
+      };
+    }
+  end
+
+  return {
+    tag = "local",
+    name = name,
+    init = init,
+  }
 end
 
 local P   = lpeg.P
@@ -240,7 +258,7 @@ local g = P({"program",
                     + printStat
                     + expTop,
 
-  localVar          = Rw("var") * ID * T("=") * expTop / localVarNode,
+  localVar          = Rw("var") * ID * (T("=") * expTop)^-1 / localVarNode,
 
   ifStat            = Rw("if") * expTop * block
                     * (Rw("elseif") * expTop * block)^0

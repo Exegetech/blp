@@ -69,6 +69,19 @@ function Test:testFunctionWithParams()
         return 1;
       }
     ]], output = 1 },
+    { input = [[
+      function main() {
+        { var x = 10; };
+        var y = 20;
+        return 1;
+      }
+    ]], output = 1 },
+    { input = [[
+      function main() {
+        var y;
+        return 1;
+      }
+    ]], output = 1 },
   }
 
   for _, case in ipairs(cases) do
