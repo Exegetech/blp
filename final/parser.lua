@@ -13,6 +13,7 @@ local indexedNode = util.createNode("indexed", "array", "index")
 local funcNode = util.createNode("function", "name", "body")
 local callNode = util.createNode("call", "fname")
 local blockNode = util.createNode("block", "body")
+local localVarNode = util.createNode("local", "name", "init")
 
 local function sequenceNode(st1, st2)
   if st2 == nil then
@@ -171,6 +172,7 @@ local reserved = {
   "else",
   "new",
   "and",
+  "var",
   "if",
   "or",
 }
@@ -217,6 +219,7 @@ local whileStat   = V("whileStat")
 local callStat    = V("callStat")
 local block = V("block")
 local funcDec = V("funcDec")
+local localVar = V("localVar")
 
 local g = P({"program",
   program           = space * Ct(funcDec^1) * -P(1),
@@ -226,9 +229,9 @@ local g = P({"program",
   statementsOrExps  = statementOrExp * ((T(";") * statementsOrExps) + T(";"))^-1 / sequenceNode,
 
   block             = T("{") * statementsOrExps * T(";")^-1 * T("}"),
-  -- block             = T("{") * statementsOrExps * T(";")^-1 * T("}") / blockNode,
 
   statementOrExp    = block
+                    + localVar
                     + ifStat
                     + whileStat
                     + callStat
@@ -236,6 +239,8 @@ local g = P({"program",
                     + returnStat
                     + printStat
                     + expTop,
+
+  localVar          = Rw("var") * ID * T("=") * expTop / localVarNode,
 
   ifStat            = Rw("if") * expTop * block
                     * (Rw("elseif") * expTop * block)^0

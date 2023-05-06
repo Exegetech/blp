@@ -60,6 +60,35 @@ function Test:testFunction()
   end
 end
 
+function Test:testFunctionWithParams()
+  local cases = {
+    { input = [[
+      function main() {
+        var x = 10;
+        var y = 20;
+        return 1;
+      }
+    ]], output = 1 },
+  }
+
+  for _, case in ipairs(cases) do
+    local parsed = parser.parse(case.input)
+    -- print(util.pt(parsed))
+    local code = ast.compile(parsed)
+    -- print(util.pt(code))
+
+    local stack = {}
+    local memory = {}
+
+    vm.run(code, memory, stack, false, 0)
+
+    -- print(util.pt(stack))
+
+    local result = stack[1]
+    lu.assertEquals(result, case.output)
+  end
+end
+
 -- function Test:testFunctionNameConflict()
 --   local cases = {
 --     { input = [[

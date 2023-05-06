@@ -140,7 +140,18 @@ local function codeAssignment(state, ast)
 end
 
 local function codeBlock(state, ast)
+  local oldLevel = #state.locals
   codeStatement(state, ast.body)
+
+  local diff = #state.locals - oldLevel
+  if diff > 0 then
+    for i = 1, diff do
+      table.remove(state.locals)
+    end
+
+    addCode(state, "pop")
+    addCode(state, diff)
+  end
 end
 
 local function codeStatement(state, ast)
@@ -151,6 +162,9 @@ local function codeStatement(state, ast)
     codeCall(state, ast)
     addCode(state, "pop")
     addCode(state, "1")
+  elseif ast.tag == "local" then
+    codeExp(state, ast.init)
+    state.locals[#state.locals + 1] = ast.name
   elseif ast.tag == "block" then
     codeBlock(state, ast)
   elseif ast.tag == "assignment" then
@@ -158,6 +172,7 @@ local function codeStatement(state, ast)
   elseif ast.tag == "return" then
     codeExp(state, ast.exp)
     addCode(state, "return")
+    addCode(state, #state.locals)
   elseif ast.tag == "print" then
     codeExp(state, ast.exp)
     addCode(state, "print")
@@ -205,10 +220,10 @@ local function codeFunction(state, ast)
         state.code = funcData.code
         codeStatement(state, ast.body)
 
-        -- All functions return 0
         addCode(state, "push")
         addCode(state, 0)
         addCode(state, "return")
+        addCode(state, #state.locals)
       end
     end
 
@@ -225,6 +240,7 @@ local function codeFunction(state, ast)
     addCode(state, "push")
     addCode(state, 0)
     addCode(state, "return")
+    addCode(state, #state.locals)
   end
 end
 
@@ -232,7 +248,8 @@ local function compile(ast)
   local state = {
     funcs = {},
     variables = {},
-    numOfVariables = 0
+    numOfVariables = 0,
+    locals = {},
   }
 
   for i = 1, #ast do

@@ -19,7 +19,9 @@ local function run(code, memory, stack, debug, top)
     end
 
     if code[pc] == "return" then
-      return top
+      local n = code[pc + 1]
+      stack[top - n] = stack[top]
+      return top - n
     elseif code[pc] == "print" then
       if debug then
         io.write("print ", stack[top])
