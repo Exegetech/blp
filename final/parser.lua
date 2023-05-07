@@ -8,6 +8,7 @@ local assignmentNode = util.createNode("assignment", "lhs", "exp")
 local returnNode = util.createNode("return", "exp")
 local printNode = util.createNode("print", "exp")
 local negNode = util.createNode("not", "exp")
+local unlessNode = util.createNode("unless", "cond", "body")
 local whileNode = util.createNode("while1", "cond", "body")
 local indexedNode = util.createNode("indexed", "array", "index")
 local funcNode = util.createNode("function", "name", "params", "body")
@@ -130,6 +131,20 @@ local function localVarNode(name, init)
   }
 end
 
+local function boolNode(val)
+  if val == "true" then
+    return {
+      tag = "number",
+      val = 1,
+    }
+  end
+
+  return {
+    tag = "number",
+    val = 0,
+  }
+end
+
 local P   = lpeg.P
 local S   = lpeg.S
 local R   = lpeg.R
@@ -167,6 +182,10 @@ local decimal       = (decimalFloat + decimalInt) / tonumber / numNode
 local scientific    = ((decimalFloat + decimalInt) * S("eE") * decimalInt) / tonumber / numNode
 local numeral       = (hexadecimal + scientific + decimal) * space
 
+local trueVal  = P("true")
+local falseVal = P("false")
+local boolVal  = (falseVal + trueVal) / boolNode
+
 local expOp       = C(S("^")) * space
 local mulDivModOp = C(S("*/%")) * space
 local addSubOp    = C(S("+-")) * space
@@ -186,7 +205,10 @@ local reserved = {
   "function",
   "elseif",
   "return",
+  "unless",
   "while",
+  "false",
+  "true",
   "else",
   "new",
   "and",
@@ -227,12 +249,14 @@ local exp4 = V("exp4")
 local exp5 = V("exp5")
 local exp6 = V("exp6")
 local expTop = V("expTop")
+local boolean = V("boolean")
 local statementOrExp    = V("statementOrExp")
 local statementsOrExps  = V("statementsOrExps")
 local assignStat  = V("assignStat")
 local returnStat  = V("returnStat")
 local printStat   = V("printStat")
 local ifStat      = V("ifStat")
+local unlessStat  = V("unlessStat")
 local whileStat   = V("whileStat")
 local callStat    = V("callStat")
 local block = V("block")
@@ -255,6 +279,7 @@ local g = P({"program",
   statementOrExp    = block
                     + localVar
                     + ifStat
+                    + unlessStat
                     + whileStat
                     + callStat
                     + assignStat
@@ -268,6 +293,8 @@ local g = P({"program",
                     * (Rw("elseif") * expTop * block)^0
                     * (Rw("else") * block)^-1
                     / foldIfNode,
+
+  unlessStat        = Rw("unless") * expTop * block / unlessNode,
 
   whileStat         = Rw("while") * expTop * block / whileNode,
 
@@ -296,10 +323,10 @@ local g = P({"program",
 
   exp0              = Ct(Rw("new") * (T("[") * expTop * T("]"))^0) / foldNew
                     + numeral
+                    + boolVal
                     + (T("(") * expTop * T(")"))
                     + call
                     + lhs,
-
 
   lhs               = Ct(var * (T("[") * expTop * T("]"))^0) / foldIndex
                     + var,

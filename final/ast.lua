@@ -251,6 +251,13 @@ codeStatement = function(state, ast)
       codeStatement(state, ast.el)
       fixJump2Here(state, jump2)
     end
+  elseif ast.tag == "unless" then
+    -- if condition is true
+    -- then jump
+    codeExp(state, ast.cond)
+    local jump = codeJumpForward(state, "jump")
+    codeStatement(state, ast.body)
+    fixJump2Here(state, jump)
   elseif ast.tag == "while1" then
     local initLabel = currentPosition(state) 
     codeExp(state, ast.cond)

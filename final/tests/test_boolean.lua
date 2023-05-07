@@ -2,23 +2,22 @@ local lu = require("luaunit")
 local parser = require("../parser")
 local ast = require("../ast")
 local vm = require("../vm")
+local util = require("../util")
 
 Test = {}
 
-function Test:testNegation()
+function Test:testBoolean()
   local cases = {
-    { input = "!0", output = 1 },
-    { input = "!!0", output = 0 },
-    { input = "k1 = 1; !k1", output = 0 },
-    { input = "k1 = 0; !k1", output = 1 },
-    { input = "k1 = 0; !!k1", output = 0 },
-    { input = "k1 = 0; !!!k1", output = 1 },
-    { input = "k1 = 0; !!!k1", output = 1 },
+    { input = "true", output = 1 },
+    { input = "false", output = 0 },
+    { input = "!false", output = 1 },
+    { input = "!true", output = 0 },
   }
 
   for _, case in ipairs(cases) do
     local input = "function main() {" .. case.input .. "}"
     local parsed = parser.parse(input)
+
     local code = ast.compile(parsed)
 
     local stack = {}

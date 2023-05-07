@@ -5,15 +5,13 @@ local vm = require("../vm")
 
 Test = {}
 
-function Test:testNegation()
+function Test:testIf()
   local cases = {
-    { input = "!0", output = 1 },
-    { input = "!!0", output = 0 },
-    { input = "k1 = 1; !k1", output = 0 },
-    { input = "k1 = 0; !k1", output = 1 },
-    { input = "k1 = 0; !!k1", output = 0 },
-    { input = "k1 = 0; !!!k1", output = 1 },
-    { input = "k1 = 0; !!!k1", output = 1 },
+    { input = [[
+      a = 0;
+      unless a { b = 5; };
+      return b;
+    ]], output = 5 },
   }
 
   for _, case in ipairs(cases) do
@@ -30,4 +28,3 @@ function Test:testNegation()
     lu.assertEquals(result, case.output)
   end
 end
-
