@@ -6,6 +6,7 @@ local function run(code, memory, stack, debug, top)
   end
 
   local pc = 1
+  local base = top
 
   while true do
 
@@ -176,6 +177,11 @@ local function run(code, memory, stack, debug, top)
       if debug then
         io.write("load ", stack[top], " from ", id)
       end
+    elseif code[pc] == "loadLocal" then
+      pc = pc + 1
+      local id = code[pc]
+      top = top + 1
+      stack[top] = stack[base + id]
     elseif code[pc] == "store" then
       pc = pc + 1
       local id = code[pc]
@@ -185,6 +191,11 @@ local function run(code, memory, stack, debug, top)
         io.write("store ", stack[top], " to ", id)
       end
 
+      top = top - 1
+    elseif code[pc] == "storeLocal" then
+      pc = pc + 1
+      local id = code[pc]
+      stack[base + id] = stack[top]
       top = top - 1
     elseif code[pc] == "jump" then
       pc = pc + 1

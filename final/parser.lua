@@ -10,8 +10,8 @@ local printNode = util.createNode("print", "exp")
 local negNode = util.createNode("not", "exp")
 local whileNode = util.createNode("while1", "cond", "body")
 local indexedNode = util.createNode("indexed", "array", "index")
-local funcNode = util.createNode("function", "name", "body")
-local callNode = util.createNode("call", "fname")
+local funcNode = util.createNode("function", "name", "params", "body")
+local callNode = util.createNode("call", "fname", "args")
 local blockNode = util.createNode("block", "body")
 
 local function sequenceNode(st1, st2)
@@ -238,15 +238,19 @@ local callStat    = V("callStat")
 local block = V("block")
 local funcDec = V("funcDec")
 local localVar = V("localVar")
+local params = V("params")
+local args = V("args")
 
 local g = P({"program",
   program           = space * Ct(funcDec^1) * -P(1),
 
-  funcDec           = Rw("function") * ID * T("(") * T(")") * (block + T(";")) / funcNode,
+  funcDec           = Rw("function") * ID * T("(") * params * T(")") * (block + T(";")) / funcNode,
+
+  params            = Ct((ID * (T(",") * ID)^0)^-1),
 
   statementsOrExps  = statementOrExp * ((T(";") * statementsOrExps) + T(";"))^-1 / sequenceNode,
 
-  block             = T("{") * statementsOrExps * T(";")^-1 * T("}"),
+  block             = T("{") * statementsOrExps * T(";")^-1 * T("}") / blockNode,
 
   statementOrExp    = block
                     + localVar
@@ -300,7 +304,9 @@ local g = P({"program",
   lhs               = Ct(var * (T("[") * expTop * T("]"))^0) / foldIndex
                     + var,
 
-  call              = ID * T("(") * T(")") / callNode,
+  call              = ID * T("(") * args * T(")") / callNode,
+
+  args              = Ct((expTop * (T(",") * expTop)^0)^-1),
 
   space             = (blockComment + S("\r\n\t ") + comment)^0
                     * P(function(match, position)

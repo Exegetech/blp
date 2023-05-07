@@ -40,6 +40,24 @@ local function storeVar2Num(state, id)
   return number
 end
 
+local function findLocal(state, name)
+  local loc = state.locals
+  for i = #loc, 1, -1 do
+    if name == loc[i] then
+      return i
+    end
+  end
+
+  local params = state.params
+  for i = 1, #params do
+    if name == params[i] then
+      return -(#params - i)
+    end
+  end
+
+  return nil
+end
+
 local function currentPosition(state)
   return #state.code
 end
@@ -62,17 +80,32 @@ local function fixJump2Here(state, loc)
   state.code[loc] = currentPosition(state)
 end
 
+-- for recursion calling
+-- between codeExp
+-- and codeCall
+local codeExp
+
 local function codeCall(state, ast)
   local func = state.funcs[ast.fname]
   if not func then
     error("undefined function " .. ast.fname)
   end
 
+  local args = ast.args
+
+  if #func.params ~= #args then
+    error("wrong number of arguments to " .. ast.fname)
+  end
+
+  for i = 1, #args do
+    codeExp(state, args[i])
+  end
+
   addCode(state, "call")
   addCode(state, func.code)
 end
 
-local function codeExp(state, ast)
+codeExp = function(state, ast)
   if ast.tag == "number" or ast.tag == "hex" then
     addCode(state, "push")
     addCode(state, ast.val)
@@ -83,9 +116,15 @@ local function codeExp(state, ast)
     codeExp(state, ast.e2)
     addCode(state, binOps[ast.op])
   elseif ast.tag == "variable" then
-    addCode(state, "load")
-    number = loadVar2Num(state, ast.val)
-    addCode(state, number)
+    local idx = findLocal(state, ast.val)
+    if idx then
+      addCode(state, "loadLocal")
+      addCode(state, idx)
+    else
+      addCode(state, "load")
+      number = loadVar2Num(state, ast.val)
+      addCode(state, number)
+    end
   elseif ast.tag == "not" then
     codeExp(state, ast.exp)
     addCode(state, "not")
@@ -120,15 +159,22 @@ end
 local function codeAssignment(state, ast)
   local lhs = ast.lhs
   if lhs.tag == "variable" then
-    if state.funcs[lhs.val] then
-      error("cannot have global variable with the same name as a function")
-    end
-
     codeExp(state, ast.exp)
-    addCode(state, "store")
 
-    local number = storeVar2Num(state, lhs.val)
-    addCode(state, number)
+    local idx = findLocal(state, lhs.val)
+    if idx then
+      addCode(state, "storeLocal")
+      addCode(state, idx)
+    else
+      if state.funcs[lhs.val] then
+        error("cannot have global variable with the same name as a function")
+      end
+
+      addCode(state, "store")
+
+      local number = storeVar2Num(state, lhs.val)
+      addCode(state, number)
+    end
   elseif lhs.tag == "indexed" then
     codeExp(state, lhs.array)
     codeExp(state, lhs.index)
@@ -138,6 +184,11 @@ local function codeAssignment(state, ast)
     error("unknown tag")
   end
 end
+
+-- for recursion calling
+-- between codeBlock
+-- and codeStatement
+local codeStatement
 
 local function codeBlock(state, ast)
   local oldLevel = #state.locals
@@ -154,7 +205,7 @@ local function codeBlock(state, ast)
   end
 end
 
-local function codeStatement(state, ast)
+codeStatement = function(state, ast)
   if ast.tag == "sequence" then
     codeStatement(state, ast.st1)
     codeStatement(state, ast.st2)
@@ -163,6 +214,17 @@ local function codeStatement(state, ast)
     addCode(state, "pop")
     addCode(state, "1")
   elseif ast.tag == "local" then
+    -- print(util.pt(state.locals))
+
+    -- if state.locals[#state.locals] == ast.name then
+    -- end
+
+    -- for i = #state.locals, 1, -1 do
+    --   if state.locals[i] == ast.name then
+    --     error("already have variable declared")
+    --   end
+    -- end
+
     codeExp(state, ast.init)
     state.locals[#state.locals + 1] = ast.name
   elseif ast.tag == "block" then
@@ -172,7 +234,7 @@ local function codeStatement(state, ast)
   elseif ast.tag == "return" then
     codeExp(state, ast.exp)
     addCode(state, "return")
-    addCode(state, #state.locals)
+    addCode(state, #state.locals + #state.params)
   elseif ast.tag == "print" then
     codeExp(state, ast.exp)
     addCode(state, "print")
@@ -205,11 +267,18 @@ local function codeFunction(state, ast)
   if ast.body == nil then
     -- is a function forward declaration
     local code = {}
+
+    if ast.name == "main" and #ast.params > 0 then
+      error("main function cannot have parameters")
+    end
+
     state.funcs[ast.name] = {
       code = code,
+      params = ast.params,
     }
 
     state.code = code
+    state.params = ast.params
   else
     -- is a function declaration
     local funcData = state.funcs[ast.name]
@@ -228,11 +297,18 @@ local function codeFunction(state, ast)
     end
 
     local code = {}
+
+    if ast.name == "main" and #ast.params > 0 then
+      error("main function cannot have parameters")
+    end
+
     state.funcs[ast.name] = {
       code = code,
+      params = ast.params,
     }
 
     state.code = code
+    state.params = ast.params
 
     codeStatement(state, ast.body)
 
@@ -240,7 +316,7 @@ local function codeFunction(state, ast)
     addCode(state, "push")
     addCode(state, 0)
     addCode(state, "return")
-    addCode(state, #state.locals)
+    addCode(state, #state.locals + #state.params)
   end
 end
 
