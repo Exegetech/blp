@@ -219,11 +219,11 @@ codeStatement = function(state, ast)
     -- if state.locals[#state.locals] == ast.name then
     -- end
 
-    -- for i = #state.locals, 1, -1 do
-    --   if state.locals[i] == ast.name then
-    --     error("already have variable declared")
-    --   end
-    -- end
+    for i = #state.locals, 1, -1 do
+      if state.locals[i] == ast.name then
+        error("already have variable declared")
+      end
+    end
 
     codeExp(state, ast.init)
     state.locals[#state.locals + 1] = ast.name
