@@ -236,8 +236,6 @@ function Test:testFunctionWithScope()
 
     vm.run(code, memory, stack, false, 0)
 
-    -- print(util.pt(stack))
-
     local result = stack[1]
     lu.assertEquals(result, case.output)
   end
