@@ -252,10 +252,8 @@ codeStatement = function(state, ast)
       fixJump2Here(state, jump2)
     end
   elseif ast.tag == "unless" then
-    -- if condition is true
-    -- then jump
     codeExp(state, ast.cond)
-    local jump = codeJumpForward(state, "jump")
+    local jump = codeJumpForward(state, "jumpNZP")
     codeStatement(state, ast.body)
     fixJump2Here(state, jump)
   elseif ast.tag == "while1" then

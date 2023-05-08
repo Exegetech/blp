@@ -18,7 +18,7 @@ local tests = {
   "tests/test_array",
   "tests/test_function",
   "tests/test_boolean",
-  -- "tests/test_unless",
+  "tests/test_unless",
 }
 
 for _, test in ipairs(tests) do
