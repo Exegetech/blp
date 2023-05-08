@@ -125,28 +125,28 @@ function Test:testFunctionMainCannotHaveParameters()
   end
 end
 
--- function Test:testFunctionGlobalVariableConflict()
---   local cases = {
---     { input = [[
---       function main() {
---         { var x = 10;
---           var x = 20;
---           return x;
---         }
---       }
---     ]], output = 2 },
---   }
+function Test:testFunctionGlobalVariableConflict()
+  local cases = {
+    { input = [[
+      function main() {
+        { var x = 10;
+          var x = 20;
+          return x;
+        }
+      }
+    ]], output = 2 },
+  }
 
---   for _, case in ipairs(cases) do
---     local parsed = parser.parse(case.input)
+  for _, case in ipairs(cases) do
+    local parsed = parser.parse(case.input)
 
---     local helper = function()
---       ast.compile(parsed)
---     end
+    local helper = function()
+      ast.compile(parsed)
+    end
 
---     lu.assertErrorMsgContains("already have variable declared", helper)
---   end
--- end
+    lu.assertErrorMsgContains("already have variable declared", helper)
+  end
+end
 
 function Test:testFunctionWithScope()
   local cases = {
@@ -214,36 +214,22 @@ function Test:testFunctionWithScope()
         };
       }
     ]], output = 10 },
-
-
-    -- { input = [[
-    --   function main() {
-    --     { var x = 10;
-    --       var x = 20;
-    --       { var y = 2;
-    --         return y;
-    --       }
-    --     }
-    --   }
-    -- ]], output = 2 },
-    -- { input = [[
-    --   function main() {
-    --     { var x = 10;
-    --       { var x = 5;
-    --        { var y = 2;
-    --           return y;
-    --         }
-    --       }
-    --     }
-    --   }
-    -- ]], output = 2 },
+    { input = [[
+      function main() {
+        { var x = 10;
+          { var x = 5;
+           { var y = 2;
+              return y;
+            }
+          }
+        }
+      }
+    ]], output = 2 },
   }
 
   for _, case in ipairs(cases) do
     local parsed = parser.parse(case.input)
-    -- print(util.pt(parsed))
     local code = ast.compile(parsed)
-    -- print(util.pt(code))
 
     local stack = {}
     local memory = {}

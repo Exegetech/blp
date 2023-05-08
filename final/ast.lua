@@ -40,9 +40,10 @@ local function storeVar2Num(state, id)
   return number
 end
 
-local function findLocal(state, name)
+local function findLocal(state, name, blockstart)
+  blockstart = blockstart or 1
   local loc = state.locals
-  for i = #loc, 1, -1 do
+  for i = #loc, blockstart, -1 do
     if name == loc[i] then
       return i
     end
@@ -191,10 +192,10 @@ end
 local codeStatement
 
 local function codeBlock(state, ast)
-  local oldLevel = #state.locals
+  state.blockstart = #state.locals
   codeStatement(state, ast.body)
 
-  local diff = #state.locals - oldLevel
+  local diff = #state.locals - state.blockstart
   if diff > 0 then
     for i = 1, diff do
       table.remove(state.locals)
@@ -214,15 +215,8 @@ codeStatement = function(state, ast)
     addCode(state, "pop")
     addCode(state, "1")
   elseif ast.tag == "local" then
-    -- print(util.pt(state.locals))
-
-    -- if state.locals[#state.locals] == ast.name then
-    -- end
-
-    for i = #state.locals, 1, -1 do
-      if state.locals[i] == ast.name then
-        error("already have variable declared")
-      end
+    if findLocal(state, ast.name, state.blockstart + 1) then
+      error("already have variable declared")
     end
 
     codeExp(state, ast.init)
@@ -331,6 +325,7 @@ local function compile(ast)
     variables = {},
     numOfVariables = 0,
     locals = {},
+    blockstart = 0,
   }
 
   for i = 1, #ast do
