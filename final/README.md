@@ -246,6 +246,16 @@ For this language to be production ready, there are lots of other things that ne
 
 ## Self assessment
 
-* Self assessment of your project: for each criteria described on the final project specs, choose a score (1, 2, 3) and explain your reason for the score in 1-2 sentences.
+- Language Completeness: 2
+
+  I implemented around 90% of the exercise. On top of that, I also implemented `unless` and boolean data type.
+
+- Code Quality & Report: 2
+
+  I think the code works as expected. Code organization seems reasonable, but could be better. This is my first time using Lua, so I am not aware of any best practices in code organization. I added tests for each of the functionality in this language. Error handling could be better, right now it is very rudimentary. 
+
+- Originality & Scope: 1
+
+  I did not modify the syntax at all. My language can run simple programs, given the available data types are only boolean and numbers. I provided a simple factorial function as an example input. See the instruction above to run.
 
 I didn't go beyond the base requirement. This is my first exposure to building a programming language, and I still have knowledge gaps that I need to address first before tackling more advanced features. I am planning to watch the videos again and rebuild this from scratch. 
