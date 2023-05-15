@@ -248,7 +248,7 @@ For this language to be production ready, there are lots of other things that ne
 
 - Language Completeness: 2
 
-  I implemented around 90% of the exercise. On top of that, I also implemented `unless` and boolean data type.
+  I implemented around 90% of the exercise. On top of that, I also implemented `unless` and boolean data type. On the other hand, I have unit tests to demonstrate that the language works.
 
 - Code Quality & Report: 2
 
